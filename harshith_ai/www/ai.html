@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Command Center · Harshith</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  window.AI = {
+    csrf: "{{ csrf_token }}",
+    name: "{{ full_name }}",
+    hasAI: {{ "true" if has_ai else "false" }}
+  };
+</script>
+<style>{% raw %}
+:root{
+  --bg:#0b0a09; --bg2:#13110e; --panel:#171410; --panel2:#1d1915;
+  --line:#2a241d; --line2:#372f24;
+  --ink:#f4ede1; --ink-dim:#b6a890; --ink-mute:#7e735f;
+  --ember:#f0a83c; --ember-deep:#d9852a; --ember-soft:#3a2a14;
+  --green:#7fcf8f; --green-soft:#16271a;
+  --red:#e8806b;
+  --serif:'Fraunces',Georgia,serif;
+  --sans:'Space Grotesk',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  -webkit-font-smoothing:antialiased; line-height:1.5; overflow-x:hidden;
+  min-height:100vh;
+}
+/* grain + ember glow atmosphere */
+body::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(900px 500px at 12% -5%, rgba(240,168,60,.10), transparent 60%),
+    radial-gradient(700px 600px at 105% 8%, rgba(217,133,42,.07), transparent 55%),
+    linear-gradient(180deg, var(--bg), var(--bg2));
+}
+body::after{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.wrap{position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:0 28px 120px}
+
+/* ── top bar ── */
+header.bar{
+  position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:18px;
+  padding:20px 28px; margin:0 -28px 0; backdrop-filter:blur(14px);
+  background:linear-gradient(180deg, rgba(11,10,9,.92), rgba(11,10,9,.55));
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex; align-items:center; gap:13px; font-family:var(--serif); font-size:20px; letter-spacing:.2px}
+.glyph{
+  width:34px; height:34px; border-radius:9px; display:grid; place-items:center;
+  background:radial-gradient(120% 120% at 30% 20%, var(--ember), var(--ember-deep));
+  color:#1a1206; font-family:var(--mono); font-weight:600; font-size:17px;
+  box-shadow:0 0 0 1px rgba(240,168,60,.4), 0 8px 24px -10px rgba(240,168,60,.6);
+}
+.brand b{font-weight:500}
+.brand span{color:var(--ink-mute); font-weight:300; font-style:italic}
+.bar .spacer{flex:1}
+.status{
+  display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11.5px;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--ink-dim);
+  padding:7px 13px; border:1px solid var(--line2); border-radius:999px; background:var(--panel);
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(127,207,143,.6);animation:pulse 2.4s infinite}
+.dot.off{background:var(--ink-mute);animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(127,207,143,.5)}70%{box-shadow:0 0 0 7px rgba(127,207,143,0)}100%{box-shadow:0 0 0 0 rgba(127,207,143,0)}}
+.who{font-family:var(--mono);font-size:12px;color:var(--ink-mute)}
+.who b{color:var(--ink);font-weight:500}
+
+/* ── hero ── */
+.hero{padding:64px 0 30px; max-width:780px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--ember);margin-bottom:20px}
+.hero h1{font-family:var(--serif);font-weight:300;font-size:clamp(38px,6vw,68px);line-height:1.02;letter-spacing:-.02em}
+.hero h1 em{font-style:italic;color:var(--ember)}
+.hero p{margin-top:22px;font-size:17px;color:var(--ink-dim);max-width:560px;font-weight:300}
+
+/* ── section title ── */
+.sec{display:flex;align-items:baseline;gap:16px;margin:56px 0 22px}
+.sec .n{font-family:var(--mono);font-size:12px;color:var(--ember);letter-spacing:.1em}
+.sec h2{font-family:var(--serif);font-weight:400;font-size:25px;letter-spacing:-.01em}
+.sec .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
+
+/* ── KPI bento ── */
+.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.card{
+  background:linear-gradient(165deg,var(--panel),var(--bg2));
+  border:1px solid var(--line); border-radius:16px; padding:22px;
+  position:relative; overflow:hidden; transition:transform .4s cubic-bezier(.2,.8,.2,1),border-color .4s;
+}
+.card:hover{transform:translateY(-3px);border-color:var(--line2)}
+.kpi{grid-column:span 3}
+.kpi.wide{grid-column:span 6}
+.kpi .label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute)}
+.kpi .val{font-family:var(--serif);font-weight:400;font-size:46px;line-height:1;margin-top:14px;letter-spacing:-.02em}
+.kpi .val .sm{font-size:18px;color:var(--ink-dim)}
+.kpi .sub{font-family:var(--mono);font-size:11.5px;color:var(--ink-dim);margin-top:10px}
+.kpi .spark{position:absolute;right:-10px;bottom:-12px;font-family:var(--serif);font-size:96px;color:rgba(240,168,60,.05);line-height:1;pointer-events:none}
+.kpi .accent{color:var(--ember)}
+.kpi .pos{color:var(--green)}
+
+/* progress micro-bars in top courses */
+.tc{grid-column:span 6}
+.tc h3{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:18px}
+.tcrow{display:flex;align-items:center;gap:14px;padding:11px 0;border-top:1px solid var(--line)}
+.tcrow:first-of-type{border-top:none}
+.tcrow .tt{flex:1;font-size:14.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tcrow .en{font-family:var(--mono);font-size:13px;color:var(--ember)}
+.tcrow .star{font-family:var(--mono);font-size:12px;color:var(--ink-mute);min-width:46px;text-align:right}
+.pill{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:5px;letter-spacing:.05em;text-transform:uppercase}
+.pill.on{background:var(--green-soft);color:var(--green)}
+.pill.off{background:var(--ember-soft);color:var(--ember)}
+
+/* activity feed */
+.feed{grid-column:span 6}
+.feed h3{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:6px}
+.fitem{display:flex;gap:13px;padding:13px 0;border-top:1px solid var(--line);align-items:flex-start}
+.fitem:first-of-type{border-top:none}
+.ficon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:14px;flex-shrink:0;border:1px solid var(--line2)}
+.ficon.enroll{background:var(--ember-soft)}
+.ficon.quiz{background:var(--green-soft)}
+.ftext{flex:1;font-size:13.5px;color:var(--ink-dim)}
+.ftext b{color:var(--ink);font-weight:500}
+.ftime{font-family:var(--mono);font-size:11px;color:var(--ink-mute);white-space:nowrap}
+
+/* ── AI tools grid ── */
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.tool{
+  background:linear-gradient(165deg,var(--panel),var(--bg2));
+  border:1px solid var(--line);border-radius:18px;padding:24px;cursor:pointer;
+  position:relative;overflow:hidden;transition:transform .4s cubic-bezier(.2,.8,.2,1),border-color .4s,box-shadow .4s;
+}
+.tool:hover{transform:translateY(-4px);border-color:var(--line2);box-shadow:0 24px 50px -28px rgba(240,168,60,.35)}
+.tool .ic{font-size:24px;margin-bottom:16px;display:block}
+.tool h3{font-family:var(--serif);font-weight:400;font-size:21px;letter-spacing:-.01em}
+.tool p{margin-top:9px;font-size:13.5px;color:var(--ink-dim);font-weight:300;min-height:38px}
+.tool .go{margin-top:16px;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ember);display:flex;align-items:center;gap:7px}
+.tool .go .arr{transition:transform .35s}
+.tool:hover .go .arr{transform:translateX(5px)}
+.tool .corner{position:absolute;top:0;right:0;width:80px;height:80px;background:radial-gradient(circle at top right,rgba(240,168,60,.12),transparent 70%);pointer-events:none}
+
+/* ── reveal animation ── */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
+.rv.in{opacity:1;transform:none}
+
+/* ── modal console ── */
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(6,5,4,.74);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .35s;display:grid;place-items:center;padding:24px}
+.scrim.open{opacity:1;pointer-events:auto}
+.console{
+  width:min(720px,100%);max-height:88vh;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line2);border-radius:20px;overflow:hidden;
+  transform:translateY(20px) scale(.98);transition:transform .4s cubic-bezier(.2,.8,.2,1);
+  box-shadow:0 40px 100px -30px rgba(0,0,0,.8);
+}
+.scrim.open .console{transform:none}
+.chead{display:flex;align-items:center;gap:13px;padding:20px 22px;border-bottom:1px solid var(--line)}
+.chead .ci{font-size:20px}
+.chead h3{font-family:var(--serif);font-weight:400;font-size:20px;flex:1}
+.chead .x{background:none;border:1px solid var(--line2);color:var(--ink-dim);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;transition:.25s}
+.chead .x:hover{background:var(--panel);color:var(--ink)}
+.cbody{padding:22px;overflow-y:auto}
+.field{margin-bottom:15px}
+.field label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:8px}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:10px;
+  padding:12px 14px;color:var(--ink);font-family:var(--sans);font-size:14.5px;resize:vertical;transition:border-color .25s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--ember)}
+.field .row{display:flex;gap:12px}
+.field .row>*{flex:1}
+.run{
+  width:100%;margin-top:6px;padding:14px;border:none;border-radius:11px;cursor:pointer;
+  background:linear-gradient(120deg,var(--ember),var(--ember-deep));color:#1a1206;
+  font-family:var(--mono);font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+  transition:transform .25s,box-shadow .25s;
+}
+.run:hover{transform:translateY(-2px);box-shadow:0 14px 30px -12px rgba(240,168,60,.6)}
+.run:disabled{opacity:.5;cursor:wait;transform:none;box-shadow:none}
+.out{
+  margin-top:20px;border-top:1px dashed var(--line2);padding-top:18px;display:none;
+}
+.out.show{display:block}
+.out .meta{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:14px}
+.badge-live{color:var(--green);border:1px solid var(--green-soft);padding:2px 8px;border-radius:5px}
+.badge-stub{color:var(--ember);border:1px solid var(--ember-soft);padding:2px 8px;border-radius:5px}
+.result{
+  font-size:14.5px;line-height:1.72;color:var(--ink);white-space:pre-wrap;word-wrap:break-word;
+  font-family:var(--sans);
+}
+.result h1,.result h2,.result h3{font-family:var(--serif);font-weight:500;margin:18px 0 8px;line-height:1.2}
+.result h1{font-size:23px}.result h2{font-size:20px}.result h3{font-size:17px}
+.result strong{color:#fff;font-weight:600}
+.result em{color:var(--ember);font-style:italic}
+.result code{font-family:var(--mono);font-size:13px;background:var(--bg);padding:2px 6px;border-radius:5px;color:var(--ember)}
+.result ul,.result ol{margin:10px 0 10px 22px}
+.result li{margin:5px 0}
+.result a{color:var(--ember)}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid var(--ember-soft);border-top-color:var(--ember);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* loading skeleton for KPIs */
+.skel{color:transparent!important;position:relative;border-radius:6px;overflow:hidden}
+.skel::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);animation:sh 1.4s infinite}
+@keyframes sh{to{transform:translateX(100%)}}
+
+footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--ink-mute);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+footer a{color:var(--ember);text-decoration:none}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:80;background:var(--panel2);border:1px solid var(--line2);color:var(--ink);padding:13px 20px;border-radius:11px;font-size:13.5px;opacity:0;transition:.35s;font-family:var(--mono)}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+@media(max-width:880px){
+  .kpi{grid-column:span 6}.kpi.wide{grid-column:span 12}
+  .tc,.feed{grid-column:span 12}
+  .tools{grid-template-columns:1fr}
+  .bar{padding:16px}
+}
+{% endraw %}</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand"><span class="glyph">H</span><b>Harshith</b>&nbsp;<span>· AI Command Center</span></div>
+  <div class="spacer"></div>
+  <div class="status" id="aiStatus"><span class="dot" id="aiDot"></span><span id="aiStatusTxt">checking…</span></div>
+  <div class="who">operator&nbsp;·&nbsp;<b>{{ full_name }}</b></div>
+</header>
+
+<div class="wrap">
+
+  <section class="hero rv">
+    <div class="eyebrow">Mission Control · Learning Platform</div>
+    <h1>Run your academy<br>from one <em>intelligent</em> deck.</h1>
+    <p>Live numbers from your courses and students, plus an AI crew that drafts curriculum, writes lessons, spots at-risk learners, and answers your teaching questions — on demand.</p>
+  </section>
+
+  <!-- ── KPIs ── -->
+  <div class="sec rv"><span class="n">01</span><h2>Live Telemetry</h2><div class="rule"></div></div>
+  <div class="bento" id="kpiGrid">
+    <!-- filled by JS; skeleton placeholders below -->
+    <div class="card kpi rv"><div class="label">Courses</div><div class="val skel" data-k="courses">––</div><div class="sub skel" data-k="courses_sub">loading</div><div class="spark">◵</div></div>
+    <div class="card kpi rv"><div class="label">Students</div><div class="val skel" data-k="students">––</div><div class="sub skel" data-k="students_sub">loading</div><div class="spark">❖</div></div>
+    <div class="card kpi rv"><div class="label">Enrollments</div><div class="val skel" data-k="enrollments">––</div><div class="sub skel" data-k="enrollments_sub">loading</div><div class="spark">⇧</div></div>
+    <div class="card kpi rv"><div class="label">Est. Revenue</div><div class="val skel" data-k="revenue">––</div><div class="sub skel" data-k="revenue_sub">loading</div><div class="spark">$</div></div>
+
+    <div class="card kpi rv"><div class="label">Avg. Progress</div><div class="val skel" data-k="avg_progress">––</div><div class="sub">across all enrollments</div><div class="spark">◌</div></div>
+    <div class="card kpi rv"><div class="label">Quiz Score</div><div class="val skel" data-k="avg_quiz">––</div><div class="sub">mean of submissions</div><div class="spark">✓</div></div>
+    <div class="card kpi rv"><div class="label">Batches · Lessons</div><div class="val skel" data-k="batches_lessons">––</div><div class="sub">live cohorts & content</div><div class="spark">▦</div></div>
+    <div class="card kpi rv"><div class="label">Certificates</div><div class="val skel" data-k="certificates">––</div><div class="sub">issued to learners</div><div class="spark">❂</div></div>
+
+    <div class="card tc rv">
+      <h3>Top Courses by Enrollment</h3>
+      <div id="topCourses"><div class="tcrow"><div class="tt skel">loading…</div></div></div>
+    </div>
+    <div class="card feed rv">
+      <h3>Recent Activity</h3>
+      <div id="feed"><div class="fitem"><div class="ftext skel">loading…</div></div></div>
+    </div>
+  </div>
+
+  <!-- ── AI tools ── -->
+  <div class="sec rv"><span class="n">02</span><h2>AI Crew</h2><div class="rule"></div></div>
+  <div class="tools" id="tools"></div>
+
+  <footer>
+    <span>HARSHITH AI · built on Frappe LMS · powered by Claude</span>
+    <span><a href="/lms">← back to the LMS</a></span>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim">
+  <div class="console" role="dialog" aria-modal="true">
+    <div class="chead"><span class="ci" id="cIcon">✦</span><h3 id="cTitle">Tool</h3><button class="x" id="cClose">✕</button></div>
+    <div class="cbody">
+      <form id="cForm"></form>
+      <button class="run" id="cRun">Generate</button>
+      <div class="out" id="cOut">
+        <div class="meta"><span id="cMetaModel">CLAUDE</span><span id="cMetaBadge"></span><span id="cMetaTime"></span></div>
+        <div class="result" id="cResult"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>{% raw %}
+(function(){
+  "use strict";
+  const API = "/api/method/harshith_ai.api.";
+  const $ = (s,r)=> (r||document).querySelector(s);
+  const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+  // ---- API helper (Frappe whitelisted methods) ----
+  async function call(method, args){
+    const res = await fetch(API+method, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "X-Frappe-CSRF-Token": window.AI.csrf },
+      body: JSON.stringify(args||{})
+    });
+    if(!res.ok){ throw new Error("HTTP "+res.status); }
+    const j = await res.json();
+    return j.message;
+  }
+
+  // ---- tiny markdown -> html ----
+  function md(t){
+    if(!t) return "";
+    let h = t
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/^### (.*)$/gm,"<h3>$1</h3>")
+      .replace(/^## (.*)$/gm,"<h2>$1</h2>")
+      .replace(/^# (.*)$/gm,"<h1>$1</h1>")
+      .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+      .replace(/(^|[^\*])\*([^\*]+)\*/g,"$1<em>$2</em>")
+      .replace(/`([^`]+)`/g,"<code>$1</code>")
+      .replace(/\[(.+?)\]\((.+?)\)/g,'<a href="$2" target="_blank">$1</a>');
+    // lists
+    const lines = h.split("\n"); let out=[]; let inUl=false, inOl=false;
+    for(let ln of lines){
+      if(/^\s*[-•]\s+/.test(ln)){ if(!inUl){out.push("<ul>");inUl=true;} out.push("<li>"+ln.replace(/^\s*[-•]\s+/,"")+"</li>"); continue; }
+      if(/^\s*\d+\.\s+/.test(ln)){ if(!inOl){out.push("<ol>");inOl=true;} out.push("<li>"+ln.replace(/^\s*\d+\.\s+/,"")+"</li>"); continue; }
+      if(inUl){out.push("</ul>");inUl=false;} if(inOl){out.push("</ol>");inOl=false;}
+      out.push(ln.trim()==="" ? "<br>" : "<p>"+ln+"</p>");
+    }
+    if(inUl)out.push("</ul>"); if(inOl)out.push("</ol>");
+    return out.join("\n").replace(/<p><(h[123]|ul|ol)>/g,"<$1>");
+  }
+
+  function fmt(n){ n=Number(n)||0; return n>=1000? (n/1000).toFixed(n>=10000?0:1)+"k" : String(n); }
+  function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2600); }
+
+  // ---- reveal on scroll ----
+  const io = new IntersectionObserver((es)=>{ es.forEach((e,i)=>{ if(e.isIntersecting){ setTimeout(()=>e.target.classList.add("in"), i*55); io.unobserve(e.target);} }); },{threshold:.12});
+  $$(".rv").forEach(el=>io.observe(el));
+
+  // ---- AI status badge ----
+  function setStatus(){
+    const dot=$("#aiDot"), txt=$("#aiStatusTxt");
+    if(window.AI.hasAI){ dot.classList.remove("off"); txt.textContent="AI ONLINE · CLAUDE"; }
+    else { dot.classList.add("off"); txt.textContent="AI PREVIEW MODE"; }
+  }
+  setStatus();
+
+  // ---- load stats ----
+  function setVal(k,v,sub){
+    const el=$('[data-k="'+k+'"]'); if(!el)return;
+    el.classList.remove("skel"); el.innerHTML=v;
+    if(sub!==undefined){ const s=$('[data-k="'+k+'_sub"]'); if(s){s.classList.remove("skel");s.textContent=sub;} }
+  }
+  async function loadStats(){
+    try{
+      const d = await call("get_dashboard_stats");
+      const k = d.kpis;
+      const cur = (k.currency==="USD"?"$": k.currency+" ");
+      setVal("courses", k.courses, k.published+" published");
+      setVal("students", fmt(k.students), "unique learners");
+      setVal("enrollments", fmt(k.enrollments), "total seats taken");
+      setVal("revenue", '<span class="sm">'+cur+'</span>'+fmt(k.revenue), "from paid courses");
+      setVal("avg_progress", k.avg_progress+'<span class="sm">%</span>');
+      setVal("avg_quiz", k.avg_quiz+'<span class="sm">%</span>');
+      setVal("batches_lessons", k.batches+'<span class="sm"> · '+k.lessons+'</span>');
+      setVal("certificates", k.certificates);
+
+      // top courses
+      const tc=$("#topCourses");
+      if(d.top_courses && d.top_courses.length){
+        tc.innerHTML = d.top_courses.map(c=>(
+          '<div class="tcrow"><span class="tt">'+esc(c.title)+'</span>'+
+          '<span class="pill '+(c.published?"on":"off")+'">'+(c.published?"live":"draft")+'</span>'+
+          '<span class="en">'+fmt(c.enrollments)+'</span>'+
+          '<span class="star">'+(c.rating?("★ "+Number(c.rating).toFixed(1)):"—")+'</span></div>'
+        )).join("");
+      } else {
+        tc.innerHTML='<div class="tcrow"><span class="tt" style="color:var(--ink-mute)">No courses yet — create your first one in the LMS, then it shows up here.</span></div>';
+      }
+    }catch(e){ console.error(e); toast("Couldn't load stats — are you logged in?"); }
+  }
+  function esc(s){ return String(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+  async function loadFeed(){
+    try{
+      const f = await call("get_recent_activity",{limit:8});
+      const el=$("#feed");
+      if(f && f.length){
+        el.innerHTML = f.map(it=>(
+          '<div class="fitem"><div class="ficon '+(it.type==="quiz"?"quiz":"enroll")+'">'+(it.type==="quiz"?"✓":"➜")+'</div>'+
+          '<div class="ftext"><b>'+esc(it.who)+'</b> '+(it.type==="quiz"?"scored on ":"enrolled in ")+'<b>'+esc(it.what)+'</b></div>'+
+          '<div class="ftime">'+rel(it.when)+'</div></div>'
+        )).join("");
+      } else {
+        el.innerHTML='<div class="fitem"><div class="ftext" style="color:var(--ink-mute)">No activity yet. When students enroll or take quizzes, it streams in here live.</div></div>';
+      }
+    }catch(e){ console.error(e); }
+  }
+  function rel(s){ try{ const d=new Date(s.replace(" ","T")); const diff=(Date.now()-d.getTime())/1000; if(diff<60)return "now"; if(diff<3600)return Math.floor(diff/60)+"m"; if(diff<86400)return Math.floor(diff/3600)+"h"; return Math.floor(diff/86400)+"d"; }catch(_){ return ""; } }
+
+  // ---- AI TOOLS definitions ----
+  const TOOLS = [
+    { id:"outline", icon:"🧭", title:"Course Architect",
+      desc:"Generate a full course outline — modules, lessons, outcomes.",
+      method:"generate_course_outline",
+      fields:[
+        {name:"topic",label:"Course topic",type:"text",ph:"e.g. ESG reporting for staffing firms"},
+        {row:[{name:"audience",label:"Audience",type:"text",ph:"beginners",val:"beginners"},
+              {name:"lessons",label:"# Lessons",type:"number",val:"8"}]}
+      ], run:"Design the course" },
+
+    { id:"assistant", icon:"✦", title:"Teaching Assistant",
+      desc:"Ask anything — strategy, engagement, marketing, ops.",
+      method:"teaching_assistant",
+      fields:[{name:"question",label:"Your question",type:"area",ph:"How do I get my first 50 students for a paid course?"}],
+      run:"Ask the assistant" },
+
+    { id:"lesson", icon:"✎", title:"Lesson Writer",
+      desc:"Draft a complete, ready-to-edit lesson in seconds.",
+      method:"write_lesson",
+      fields:[
+        {name:"title",label:"Lesson title",type:"text",ph:"e.g. Reading a carbon footprint report"},
+        {row:[{name:"course",label:"Course (optional)",type:"course"},
+              {name:"level",label:"Level",type:"select",opts:["beginner","intermediate","advanced"]}]}
+      ], run:"Write the lesson" },
+
+    { id:"insights", icon:"◑", title:"Student Insights",
+      desc:"AI reads real progress data & flags at-risk learners.",
+      method:"student_insights", fields:[], run:"Analyze my students", auto:true },
+
+    { id:"announce", icon:"📣", title:"Announcement Composer",
+      desc:"Write punchy announcements for your batches & students.",
+      method:"compose_announcement",
+      fields:[
+        {name:"occasion",label:"What's it about?",type:"text",ph:"New course dropping Friday"},
+        {name:"tone",label:"Tone",type:"select",opts:["friendly","exciting","professional","urgent"]}
+      ], run:"Compose it" },
+
+    { id:"ideas", icon:"❍", title:"Content Ideas",
+      desc:"Brainstorm course & lesson ideas for your niche.",
+      method:"teaching_assistant",
+      fields:[{name:"question",label:"Your niche / theme",type:"text",ph:"ESG & sustainability careers",
+               wrap:(v)=>"Brainstorm 10 compelling course ideas (with one-line hooks) for this niche: "+v}],
+      run:"Brainstorm ideas" },
+  ];
+
+  // ---- render tool cards ----
+  let courseCache = null;
+  $("#tools").innerHTML = TOOLS.map(t=>(
+    '<div class="tool rv" data-id="'+t.id+'"><span class="corner"></span>'+
+    '<span class="ic">'+t.icon+'</span><h3>'+t.title+'</h3><p>'+t.desc+'</p>'+
+    '<div class="go">open tool <span class="arr">→</span></div></div>'
+  )).join("");
+  $$(".tool").forEach(el=>io.observe(el));
+  $$(".tool").forEach(el=> el.addEventListener("click",()=>openTool(el.dataset.id)));
+
+  // ---- modal logic ----
+  const scrim=$("#scrim"), cForm=$("#cForm"), cOut=$("#cOut"), cResult=$("#cResult");
+  let current=null;
+
+  async function ensureCourses(){
+    if(courseCache) return courseCache;
+    try{ courseCache = await call("get_courses_brief"); }catch(_){ courseCache=[]; }
+    return courseCache;
+  }
+
+  async function openTool(id){
+    current = TOOLS.find(t=>t.id===id); if(!current) return;
+    $("#cIcon").textContent=current.icon; $("#cTitle").textContent=current.title;
+    cOut.classList.remove("show"); cResult.innerHTML="";
+    // build form
+    const courses = current.fields.some(f=>f.type==="course"||(f.row&&f.row.some(r=>r.type==="course"))) ? await ensureCourses() : [];
+    cForm.innerHTML = current.fields.map(f=> renderField(f,courses)).join("");
+    $("#cRun").textContent = current.run || "Generate";
+    scrim.classList.add("open");
+    const first=cForm.querySelector("input,textarea,select"); if(first) setTimeout(()=>first.focus(),250);
+    if(current.auto){ // insights has no inputs -> run immediately
+      runTool();
+    }
+  }
+  function renderField(f,courses){
+    if(f.row) return '<div class="field"><div class="row">'+f.row.map(r=>fieldInner(r,courses)).join("")+'</div></div>';
+    return '<div class="field">'+fieldInner(f,courses)+'</div>';
+  }
+  function fieldInner(f,courses){
+    const lab = f.label?'<label>'+f.label+'</label>':"";
+    if(f.type==="area") return lab+'<textarea name="'+f.name+'" rows="4" placeholder="'+(f.ph||"")+'"></textarea>';
+    if(f.type==="select") return lab+'<select name="'+f.name+'">'+f.opts.map(o=>'<option>'+o+'</option>').join("")+'</select>';
+    if(f.type==="course"){ const opts='<option value="">— none —</option>'+(courses||[]).map(c=>'<option value="'+esc(c.title)+'">'+esc(c.title)+'</option>').join(""); return lab+'<select name="'+f.name+'">'+opts+'</select>'; }
+    if(f.type==="number") return lab+'<input type="number" name="'+f.name+'" value="'+(f.val||"")+'" min="3" max="20">';
+    return lab+'<input type="text" name="'+f.name+'" placeholder="'+(f.ph||"")+'" value="'+(f.val||"")+'">';
+  }
+
+  function closeModal(){ scrim.classList.remove("open"); }
+  $("#cClose").addEventListener("click",closeModal);
+  scrim.addEventListener("click",(e)=>{ if(e.target===scrim) closeModal(); });
+  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
+
+  $("#cRun").addEventListener("click",runTool);
+
+  async function runTool(){
+    if(!current) return;
+    const btn=$("#cRun");
+    const args={};
+    $$("#cForm [name]").forEach(el=>{ args[el.name]= el.value; });
+    // apply wrap transforms (e.g. content ideas)
+    current.fields.forEach(f=>{ if(f.wrap && args[f.name]!=null) args[f.name]=f.wrap(args[f.name]); });
+    // validate required text
+    const firstText = current.fields.find(f=>f.type==="text"||f.type==="area");
+    if(firstText && !current.auto && !(args[firstText.name]||"").trim()){ toast("Fill in the field first ✍️"); return; }
+
+    btn.disabled=true; const t0=performance.now();
+    cOut.classList.add("show");
+    cResult.innerHTML='<span class="spin"></span> &nbsp;<span style="color:var(--ink-dim)">'+(window.AI.hasAI?"Claude is thinking…":"drafting preview…")+'</span>';
+    $("#cMetaBadge").innerHTML=""; $("#cMetaTime").textContent="";
+    try{
+      const r = await call(current.method, args);
+      const text = (r && r.text!=null) ? r.text : (typeof r==="string"? r : JSON.stringify(r));
+      const isReal = r && r.is_real;
+      cResult.innerHTML = md(text);
+      $("#cMetaModel").textContent = isReal? "CLAUDE · OPUS" : "PREVIEW";
+      $("#cMetaBadge").innerHTML = isReal? '<span class="badge-live">live</span>' : '<span class="badge-stub">placeholder</span>';
+      $("#cMetaTime").textContent = ((performance.now()-t0)/1000).toFixed(1)+"s";
+      if(r && r.stalled_count!=null){
+        cResult.insertAdjacentHTML("afterbegin",
+          '<p style="font-family:var(--mono);font-size:12px;color:var(--ember);margin-bottom:12px">⚑ '+r.stalled_count+' of '+r.total_reviewed+' reviewed learners are under 25% complete.</p>');
+      }
+    }catch(e){ console.error(e); cResult.innerHTML='<p style="color:var(--red)">Something went wrong ('+e.message+'). Make sure you are logged in as an admin.</p>'; }
+    btn.disabled=false;
+  }
+
+  // ---- boot ----
+  loadStats(); loadFeed();
+})();
+{% endraw %}</script>
+</body>
+</html>
