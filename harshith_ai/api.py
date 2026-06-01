@@ -46,6 +46,7 @@ def _api_key():
 	return (frappe.conf.get("anthropic_api_key") or "").strip()
 
 
+@frappe.whitelist()
 def has_ai():
 	"""True if a Claude key is configured (drives the 'AI live' badge in UI)."""
 	_guard()
